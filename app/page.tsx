@@ -7,6 +7,7 @@ import PricingCard from "@/components/pricing-card"
 import TestimonialCard from "@/components/testimonial-card"
 import SEOAnalyzer from "@/components/seo-analyzer"
 import { checkUserHasPaid } from "@/app/services/payment-service"
+import Link from "next/link"
 
 export default async function Home() {
   // Check if the user has paid
@@ -22,20 +23,109 @@ export default async function Home() {
           <p className="text-xl md:text-2xl mb-10 max-w-3xl mx-auto">
             Get instant, actionable SEO insights powered by cutting-edge AI technology
           </p>
-          <Button className="bg-black hover:bg-gray-800 text-white rounded-full px-8 py-6 text-xl font-bold">
-            Start Now <ChevronRight className="ml-2" />
+          <Button asChild className="bg-black hover:bg-gray-800 text-white rounded-full px-8 py-6 text-xl font-bold">
+            <Link href="#analyzer">
+              Start Now <ChevronRight className="ml-2" />
+            </Link>
           </Button>
         </div>
       </section>
 
+      {/* Features Section */}
+      <section id="features" className="py-20 bg-white">
+        <div className="container px-4 mx-auto">
+          <div className="max-w-3xl mx-auto text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Powerful SEO Features</h2>
+            <p className="text-lg text-gray-700">
+              Discover what makes Neuron Bright the smartest choice for your SEO needs
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <div className="bg-gray-50 p-6 rounded-xl text-center">
+              <div className="w-16 h-16 bg-[#dc6b27]/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-8 w-8 text-[#dc6b27]"
+                >
+                  <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold mb-2">AI-Powered Analysis</h3>
+              <p className="text-gray-600">
+                Our advanced AI algorithms analyze your website against 200+ SEO factors in minutes.
+              </p>
+            </div>
+
+            <div className="bg-gray-50 p-6 rounded-xl text-center">
+              <div className="w-16 h-16 bg-[#dc6b27]/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-8 w-8 text-[#dc6b27]"
+                >
+                  <path d="M12 20V10" />
+                  <path d="m18 20-6-6-6 6" />
+                  <path d="M8 4h8" />
+                  <path d="M12 4v4" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold mb-2">Actionable Insights</h3>
+              <p className="text-gray-600">
+                Get clear, prioritized recommendations that actually move the needle on your rankings.
+              </p>
+            </div>
+
+            <div className="bg-gray-50 p-6 rounded-xl text-center">
+              <div className="w-16 h-16 bg-[#dc6b27]/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-8 w-8 text-[#dc6b27]"
+                >
+                  <path d="M3 3v18h18" />
+                  <path d="m19 9-5 5-4-4-3 3" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold mb-2">Comprehensive Reports</h3>
+              <p className="text-gray-600">
+                Detailed reports with visual metrics that are easy to understand and implement.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Signup Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-gray-50">
         <div className="container px-4 mx-auto">
           <div className="max-w-3xl mx-auto text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Boost Your Rankings?</h2>
             <p className="text-lg text-gray-700">Sign up in seconds and transform your SEO strategy today.</p>
           </div>
-          <div className="max-w-md mx-auto bg-gray-50 p-8 rounded-2xl shadow-sm">
+          <div className="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-sm">
             <div className="space-y-4">
               <div>
                 <Input type="text" placeholder="Your Name" className="w-full p-3 rounded-xl border-gray-300" />
@@ -43,8 +133,8 @@ export default async function Home() {
               <div>
                 <Input type="email" placeholder="Your Email" className="w-full p-3 rounded-xl border-gray-300" />
               </div>
-              <Button className="w-full bg-[#dc6b27] hover:bg-[#c05e22] text-black font-bold py-3 rounded-xl">
-                Get Started
+              <Button asChild className="w-full bg-[#dc6b27] hover:bg-[#c05e22] text-black font-bold py-3 rounded-xl">
+                <Link href="#pricing">Get Started</Link>
               </Button>
             </div>
           </div>
@@ -52,7 +142,7 @@ export default async function Home() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 bg-gray-50">
+      <section id="pricing" className="py-20 bg-white">
         <div className="container px-4 mx-auto">
           <div className="max-w-3xl mx-auto text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Choose Your SEO Power-Up</h2>
@@ -122,7 +212,7 @@ export default async function Home() {
       </section>
 
       {/* About Section */}
-      <section className="py-20 bg-white">
+      <section id="about" className="py-20 bg-white">
         <div className="container px-4 mx-auto">
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-12">
@@ -181,7 +271,7 @@ export default async function Home() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 bg-white">
+      <section id="faq" className="py-20 bg-white">
         <div className="container px-4 mx-auto">
           <div className="max-w-3xl mx-auto text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
@@ -256,20 +346,20 @@ export default async function Home() {
 
             <div>
               <h3 className="text-xl font-bold mb-4">Contact</h3>
-              <p className="text-gray-400 mb-2">hello@neuronbright.com</p>
-              <p className="text-gray-400">+44 (0) 123 456 7890</p>
+              <p className="text-gray-400 mb-2">
+                <a href="mailto:info@neuronbright.com" className="hover:text-white">
+                  info@neuronbright.com
+                </a>
+              </p>
             </div>
 
             <div>
               <h3 className="text-xl font-bold mb-4">Follow Us</h3>
               <div className="flex space-x-4">
-                <a href="#" className="text-gray-400 hover:text-white">
+                <a href="https://twitter.com/neuronbright" className="text-gray-400 hover:text-white">
                   Twitter
                 </a>
-                <a href="#" className="text-gray-400 hover:text-white">
-                  LinkedIn
-                </a>
-                <a href="#" className="text-gray-400 hover:text-white">
+                <a href="https://instagram.com/neuronbright" className="text-gray-400 hover:text-white">
                   Instagram
                 </a>
               </div>
@@ -278,15 +368,15 @@ export default async function Home() {
             <div>
               <h3 className="text-xl font-bold mb-4">Legal</h3>
               <div className="flex flex-col space-y-2">
-                <a href="#" className="text-gray-400 hover:text-white">
+                <Link href="/privacy-policy" className="text-gray-400 hover:text-white">
                   Privacy Policy
-                </a>
-                <a href="#" className="text-gray-400 hover:text-white">
+                </Link>
+                <Link href="/terms-of-service" className="text-gray-400 hover:text-white">
                   Terms of Service
-                </a>
-                <a href="#" className="text-gray-400 hover:text-white">
+                </Link>
+                <Link href="/cookie-policy" className="text-gray-400 hover:text-white">
                   Cookie Policy
-                </a>
+                </Link>
               </div>
             </div>
           </div>

@@ -14,21 +14,23 @@ export default function Header() {
           </div>
 
           <nav className="hidden md:flex items-center space-x-8">
-            <Link href="#" className="font-medium hover:underline">
+            <Link href="#features" className="font-medium hover:underline">
               Features
             </Link>
-            <Link href="#" className="font-medium hover:underline">
+            <Link href="#pricing" className="font-medium hover:underline">
               Pricing
             </Link>
-            <Link href="#" className="font-medium hover:underline">
+            <Link href="#about" className="font-medium hover:underline">
               About
             </Link>
-            <Link href="#" className="font-medium hover:underline">
+            <Link href="#faq" className="font-medium hover:underline">
               FAQ
             </Link>
           </nav>
 
-          <Button className="bg-black hover:bg-gray-800 text-white rounded-full px-6 py-2 font-bold">Start Now</Button>
+          <Button asChild className="bg-black hover:bg-gray-800 text-white rounded-full px-6 py-2 font-bold">
+            <Link href="#analyzer">Start Now</Link>
+          </Button>
         </div>
       </div>
     </header>
