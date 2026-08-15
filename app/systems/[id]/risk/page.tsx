@@ -12,7 +12,7 @@ import { AppShell } from "@/components/app-shell";
 import { StatusBadge } from "@/components/status-badge";
 import { aiSystems } from "@/lib/mock-data";
 
-type RiskLevel = "Low" | "Medium" | "High" | "Critical";
+type DimensionLevel = "Low" | "Medium" | "High";
 
 export default async function SystemRiskPage({
   params,
@@ -25,7 +25,7 @@ export default async function SystemRiskPage({
   const dimensions: {
     name: string;
     score: number;
-    level: RiskLevel;
+    level: DimensionLevel;
     explanation: string;
   }[] = [
     {
@@ -102,18 +102,25 @@ export default async function SystemRiskPage({
                   <p className="text-[9px] uppercase tracking-[0.16em] text-white/20">
                     Risk dimensions
                   </p>
+
                   <h2 className="mt-1 text-base font-semibold">
                     Inherent risk profile
                   </h2>
                 </div>
 
-                <Sparkles size={17} className="text-[#dc6b27]" />
+                <Sparkles
+                  size={17}
+                  className="text-[#dc6b27]"
+                />
               </div>
             </div>
 
             <div className="divide-y divide-white/[0.07]">
               {dimensions.map((dimension) => (
-                <div key={dimension.name} className="px-6 py-5">
+                <div
+                  key={dimension.name}
+                  className="px-6 py-5"
+                >
                   <div className="flex items-start justify-between gap-5">
                     <div>
                       <p className="text-sm font-medium text-white/75">
@@ -139,7 +146,9 @@ export default async function SystemRiskPage({
                   <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
                     <div
                       className="h-full rounded-full bg-[#dc6b27]"
-                      style={{ width: `${dimension.score}%` }}
+                      style={{
+                        width: `${dimension.score}%`,
+                      }}
                     />
                   </div>
 
@@ -159,7 +168,9 @@ export default async function SystemRiskPage({
 
               <div className="mt-5 flex items-end justify-between">
                 <div>
-                  <p className="text-4xl font-semibold">78</p>
+                  <p className="text-4xl font-semibold">
+                    78
+                  </p>
 
                   <p className="mt-1 text-xs text-white/30">
                     Risk score
@@ -195,7 +206,10 @@ export default async function SystemRiskPage({
                   "Control review required",
                   "Evidence package required",
                 ].map((item) => (
-                  <div key={item} className="flex items-center gap-3">
+                  <div
+                    key={item}
+                    className="flex items-center gap-3"
+                  >
                     <CircleAlert
                       size={14}
                       className="text-[#dc6b27]"
