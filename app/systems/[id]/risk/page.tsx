@@ -2,7 +2,6 @@ import Link from "next/link";
 import {
   ArrowLeft,
   ArrowRight,
-  CheckCircle2,
   CircleAlert,
   FileCheck2,
   ShieldAlert,
@@ -13,6 +12,8 @@ import { AppShell } from "@/components/app-shell";
 import { StatusBadge } from "@/components/status-badge";
 import { aiSystems } from "@/lib/mock-data";
 
+type RiskLevel = "Low" | "Medium" | "High" | "Critical";
+
 export default async function SystemRiskPage({
   params,
 }: {
@@ -21,7 +22,12 @@ export default async function SystemRiskPage({
   const { id } = await params;
   const system = aiSystems.find((item) => item.id === id) ?? aiSystems[1];
 
-  const dimensions = [
+  const dimensions: {
+    name: string;
+    score: number;
+    level: RiskLevel;
+    explanation: string;
+  }[] = [
     {
       name: "Impact on individuals",
       score: 82,
@@ -113,6 +119,7 @@ export default async function SystemRiskPage({
                       <p className="text-sm font-medium text-white/75">
                         {dimension.name}
                       </p>
+
                       <p className="mt-1 max-w-xl text-xs leading-5 text-white/30">
                         {dimension.explanation}
                       </p>
@@ -122,6 +129,7 @@ export default async function SystemRiskPage({
                       <p className="text-lg font-semibold">
                         {dimension.score}
                       </p>
+
                       <p className="text-[9px] uppercase tracking-[0.12em] text-white/25">
                         / 100
                       </p>
@@ -152,6 +160,7 @@ export default async function SystemRiskPage({
               <div className="mt-5 flex items-end justify-between">
                 <div>
                   <p className="text-4xl font-semibold">78</p>
+
                   <p className="mt-1 text-xs text-white/30">
                     Risk score
                   </p>
@@ -191,6 +200,7 @@ export default async function SystemRiskPage({
                       size={14}
                       className="text-[#dc6b27]"
                     />
+
                     <span className="text-xs text-white/50">
                       {item}
                     </span>
@@ -205,13 +215,17 @@ export default async function SystemRiskPage({
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div className="flex items-start gap-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#dc6b27]/10">
-                <FileCheck2 size={18} className="text-[#dc6b27]" />
+                <FileCheck2
+                  size={18}
+                  className="text-[#dc6b27]"
+                />
               </div>
 
               <div>
                 <p className="text-sm font-medium">
                   Next: map required controls
                 </p>
+
                 <p className="mt-1 text-xs text-white/30">
                   NEURONBRIGHT will translate the risk profile into a
                   governance control set.
