@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+:root {
+  --nb-orange: #dc6b27;
+  --nb-black: #070707;
+  --nb-surface: #0b0b0b;
+  --nb-surface-2: #0f0f0f;
+  --nb-border: rgba(255, 255, 255, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--nb-black);
+}
+
+body {
+  margin: 0;
+  background: var(--nb-black);
+  color: #ffffff;
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+}
+
+::selection {
+  background: var(--nb-orange);
+  color: #000;
+}
