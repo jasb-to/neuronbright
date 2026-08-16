@@ -27,92 +27,46 @@ create table public.memberships (
 );
 
 create table public.ai_systems (
-  id uuid primary key default gen_random_uuid(),
-  organisation_id uuid not null references public.organisations(id) on delete cascade,
-  name text not null,
-  provider text not null,
-  model text,
-  owner text,
-  department text,
-  risk_level text check (risk_level in ('Low', 'Medium', 'High')),
-  status text check (status in ('Healthy', 'Review')) default 'Review',
-  evidence_score integer not null default 0 check (evidence_score between 0 and 100),
-  purpose text,
-  data_types jsonb not null default '[]'::jsonb,
-  lifecycle_stage public.ai_lifecycle_stage not null default 'Discover',
-  approval_owner text,
-  last_reviewed date,
-  next_review_date date,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  id uuid primary key default gen_random_uuid(), organisation_id uuid not null references public.organisations(id) on delete cascade,
+  name text not null, provider text not null, model text, owner text, department text,
+  risk_level text check (risk_level in ('Low', 'Medium', 'High')), status text check (status in ('Healthy', 'Review')) default 'Review',
+  evidence_score integer not null default 0 check (evidence_score between 0 and 100), purpose text,
+  data_types jsonb not null default '[]'::jsonb, lifecycle_stage public.ai_lifecycle_stage not null default 'Discover',
+  approval_owner text, last_reviewed date, next_review_date date, created_at timestamptz not null default now(), updated_at timestamptz not null default now()
 );
 
 create table public.risk_assessments (
-  id uuid primary key default gen_random_uuid(),
-  organisation_id uuid not null references public.organisations(id) on delete cascade,
-  ai_system_id uuid not null references public.ai_systems(id) on delete cascade,
-  overall_score integer not null check (overall_score between 0 and 100),
-  overall_level text not null check (overall_level in ('Low', 'Medium', 'High')),
-  dimensions jsonb not null default '[]'::jsonb,
-  assessed_at timestamptz not null default now()
+  id uuid primary key default gen_random_uuid(), organisation_id uuid not null references public.organisations(id) on delete cascade,
+  ai_system_id uuid not null references public.ai_systems(id) on delete cascade, overall_score integer not null check (overall_score between 0 and 100),
+  overall_level text not null check (overall_level in ('Low', 'Medium', 'High')), dimensions jsonb not null default '[]'::jsonb, assessed_at timestamptz not null default now()
 );
 
 create table public.controls (
-  id uuid primary key default gen_random_uuid(),
-  organisation_id uuid not null references public.organisations(id) on delete cascade,
-  ai_system_id uuid references public.ai_systems(id) on delete cascade,
-  external_id text not null,
-  name text not null,
-  description text,
-  area text,
-  required boolean not null default true,
-  status public.control_status not null default 'Missing',
-  evidence_required jsonb not null default '[]'::jsonb,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  id uuid primary key default gen_random_uuid(), organisation_id uuid not null references public.organisations(id) on delete cascade,
+  ai_system_id uuid references public.ai_systems(id) on delete cascade, external_id text not null, name text not null, description text, area text,
+  required boolean not null default true, status public.control_status not null default 'Missing', evidence_required jsonb not null default '[]'::jsonb,
+  created_at timestamptz not null default now(), updated_at timestamptz not null default now()
 );
 
 create table public.evidence (
-  id uuid primary key default gen_random_uuid(),
-  organisation_id uuid not null references public.organisations(id) on delete cascade,
-  ai_system_id uuid references public.ai_systems(id) on delete set null,
-  control_id uuid references public.controls(id) on delete set null,
-  name text not null,
-  source text,
-  storage_path text,
-  status public.evidence_status not null default 'Pending',
-  framework text,
-  expires_at date,
-  uploaded_by uuid references auth.users(id) on delete set null,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  id uuid primary key default gen_random_uuid(), organisation_id uuid not null references public.organisations(id) on delete cascade,
+  ai_system_id uuid references public.ai_systems(id) on delete set null, control_id uuid references public.controls(id) on delete set null,
+  name text not null, source text, storage_path text, status public.evidence_status not null default 'Pending', framework text, expires_at date,
+  uploaded_by uuid references auth.users(id) on delete set null, created_at timestamptz not null default now(), updated_at timestamptz not null default now()
 );
 
 create table public.remediation_tasks (
-  id uuid primary key default gen_random_uuid(),
-  organisation_id uuid not null references public.organisations(id) on delete cascade,
-  ai_system_id uuid references public.ai_systems(id) on delete set null,
-  control_id uuid references public.controls(id) on delete set null,
-  title text not null,
-  description text,
-  framework text,
-  owner text,
-  due_date date,
-  priority text check (priority in ('Critical', 'High', 'Medium', 'Low')) default 'Medium',
-  status public.remediation_status not null default 'Open',
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  id uuid primary key default gen_random_uuid(), organisation_id uuid not null references public.organisations(id) on delete cascade,
+  ai_system_id uuid references public.ai_systems(id) on delete set null, control_id uuid references public.controls(id) on delete set null,
+  title text not null, description text, framework text, owner text, due_date date,
+  priority text check (priority in ('Critical', 'High', 'Medium', 'Low')) default 'Medium', status public.remediation_status not null default 'Open',
+  created_at timestamptz not null default now(), updated_at timestamptz not null default now()
 );
 
 create table public.audit_log (
-  id uuid primary key default gen_random_uuid(),
-  organisation_id uuid not null references public.organisations(id) on delete cascade,
-  user_id uuid references auth.users(id) on delete set null,
-  action text not null,
-  entity_type text not null,
-  entity_id uuid,
-  metadata jsonb not null default '{}'::jsonb,
-  created_at timestamptz not null default now()
+  id uuid primary key default gen_random_uuid(), organisation_id uuid not null references public.organisations(id) on delete cascade,
+  user_id uuid references auth.users(id) on delete set null, action text not null, entity_type text not null, entity_id uuid,
+  metadata jsonb not null default '{}'::jsonb, created_at timestamptz not null default now()
 );
 
 create index memberships_user_idx on public.memberships(user_id);
@@ -133,50 +87,26 @@ alter table public.remediation_tasks enable row level security;
 alter table public.audit_log enable row level security;
 
 create or replace function public.is_org_member(target_org uuid)
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select exists (
-    select 1 from public.memberships m
-    where m.organisation_id = target_org and m.user_id = auth.uid()
-  );
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.memberships m where m.organisation_id = target_org and m.user_id = auth.uid());
 $$;
 
-create policy "members can read their organisations" on public.organisations
-  for select using (public.is_org_member(id));
+create policy "members can read their organisations" on public.organisations for select using (public.is_org_member(id));
+create policy "authenticated users can create organisations" on public.organisations for insert to authenticated with check (true);
+create policy "members can update their organisations" on public.organisations for update using (public.is_org_member(id)) with check (public.is_org_member(id));
 
-create policy "members can read memberships" on public.memberships
-  for select using (user_id = auth.uid() or public.is_org_member(organisation_id));
+create policy "members can read memberships" on public.memberships for select using (user_id = auth.uid() or public.is_org_member(organisation_id));
+create policy "users can create their own membership" on public.memberships for insert to authenticated with check (user_id = auth.uid());
+create policy "members can update their memberships" on public.memberships for update using (user_id = auth.uid() or public.is_org_member(organisation_id)) with check (user_id = auth.uid() or public.is_org_member(organisation_id));
 
-create policy "members manage ai systems" on public.ai_systems
-  for all using (public.is_org_member(organisation_id)) with check (public.is_org_member(organisation_id));
+create policy "members manage ai systems" on public.ai_systems for all using (public.is_org_member(organisation_id)) with check (public.is_org_member(organisation_id));
+create policy "members manage risk assessments" on public.risk_assessments for all using (public.is_org_member(organisation_id)) with check (public.is_org_member(organisation_id));
+create policy "members manage controls" on public.controls for all using (public.is_org_member(organisation_id)) with check (public.is_org_member(organisation_id));
+create policy "members manage evidence" on public.evidence for all using (public.is_org_member(organisation_id)) with check (public.is_org_member(organisation_id));
+create policy "members manage remediation" on public.remediation_tasks for all using (public.is_org_member(organisation_id)) with check (public.is_org_member(organisation_id));
+create policy "members read audit log" on public.audit_log for select using (public.is_org_member(organisation_id));
 
-create policy "members manage risk assessments" on public.risk_assessments
-  for all using (public.is_org_member(organisation_id)) with check (public.is_org_member(organisation_id));
-
-create policy "members manage controls" on public.controls
-  for all using (public.is_org_member(organisation_id)) with check (public.is_org_member(organisation_id));
-
-create policy "members manage evidence" on public.evidence
-  for all using (public.is_org_member(organisation_id)) with check (public.is_org_member(organisation_id));
-
-create policy "members manage remediation" on public.remediation_tasks
-  for all using (public.is_org_member(organisation_id)) with check (public.is_org_member(organisation_id));
-
-create policy "members read audit log" on public.audit_log
-  for select using (public.is_org_member(organisation_id));
-
-create or replace function public.touch_updated_at()
-returns trigger language plpgsql as $$
-begin
-  new.updated_at = now();
-  return new;
-end;
-$$;
-
+create or replace function public.touch_updated_at() returns trigger language plpgsql as $$ begin new.updated_at = now(); return new; end; $$;
 create trigger organisations_touch before update on public.organisations for each row execute function public.touch_updated_at();
 create trigger ai_systems_touch before update on public.ai_systems for each row execute function public.touch_updated_at();
 create trigger controls_touch before update on public.controls for each row execute function public.touch_updated_at();
