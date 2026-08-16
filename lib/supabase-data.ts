@@ -92,9 +92,9 @@ export async function createOrganisationSystem(input: {
       department: input.department ?? null,
       purpose: input.purpose ?? null,
       data_types: input.dataTypes ?? [],
-      risk_level: input.riskLevel ?? "Review",
+      risk_level: input.riskLevel ?? "Low",
       evidence_score: input.evidenceScore ?? 0,
-      lifecycle_stage: input.lifecycleStage ?? "Discover",
+      lifecycle_stage: input.lifecycleStage ?? "Assess",
       status: "Review",
     })
     .select()
@@ -102,6 +102,66 @@ export async function createOrganisationSystem(input: {
 
   if (error) throw new Error(error.message);
   return data as DbSystem;
+}
+
+export async function createGovernanceRecord(input: {
+  systemId: string;
+  assessment: {
+    overallScore: number;
+    overallLevel: "Low" | "Medium" | "High";
+    dimensions: unknown[];
+    assessedAt: string;
+  };
+  controls: Array<{
+    id: string;
+    name: string;
+    description: string;
+    area: string;
+    required: boolean;
+    status: "Complete" | "In Progress" | "Missing";
+    evidenceRequired: string[];
+  }>;
+}) {
+  const organisationId = await getCurrentOrganisationId();
+  if (!organisationId) throw new Error("No organisation membership found.");
+
+  const supabase = await getSupabaseServerClient();
+
+  const { data: risk, error: riskError } = await supabase
+    .from("risk_assessments")
+    .insert({
+      organisation_id: organisationId,
+      ai_system_id: input.systemId,
+      overall_score: input.assessment.overallScore,
+      overall_level: input.assessment.overallLevel,
+      dimensions: input.assessment.dimensions,
+      assessed_at: input.assessment.assessedAt,
+    })
+    .select()
+    .single();
+
+  if (riskError) throw new Error(riskError.message);
+
+  const controls = input.controls.length
+    ? input.controls.map((control) => ({
+        organisation_id: organisationId,
+        ai_system_id: input.systemId,
+        external_id: control.id,
+        name: control.name,
+        description: control.description,
+        area: control.area,
+        required: control.required,
+        status: control.status,
+        evidence_required: control.evidenceRequired,
+      }))
+    : [];
+
+  if (controls.length) {
+    const { error: controlsError } = await supabase.from("controls").insert(controls);
+    if (controlsError) throw new Error(controlsError.message);
+  }
+
+  return { risk, controlsCount: controls.length };
 }
 
 export async function writeAuditLog(input: {
