@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Boxes, CheckSquare, FileCheck2, FileText, LayoutDashboard, Settings, Shield } from "lucide-react";
+import { Activity, Boxes, CheckSquare, FileCheck2, FileText, LayoutDashboard, Settings, Shield, Building2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Brand } from "./brand";
 
 const primaryNavigation = [
   { name: "Control Centre", href: "/dashboard", icon: LayoutDashboard },
   { name: "AI Systems", href: "/systems", icon: Boxes },
+  { name: "Vendors", href: "/vendors", icon: Building2 },
   { name: "Evidence Centre", href: "/evidence", icon: FileCheck2 },
 ];
 
