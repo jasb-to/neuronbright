@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Activity, AlertTriangle, Boxes, ShieldCheck } from "lucide-react";
+import { Activity, AlertTriangle, Boxes, ShieldCheck, type LucideIcon } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { StatusBadge } from "@/components/status-badge";
 import { aiSystems } from "@/lib/mock-data";
 import { getStoredSystems } from "@/lib/client-store";
 import type { AISystem } from "@/lib/types";
+
+type Metric = { label: string; value: string | number; icon: LucideIcon };
 
 export default function MonitoringPage() {
   const [stored, setStored] = useState<AISystem[]>([]);
@@ -17,6 +19,12 @@ export default function MonitoringPage() {
   const highRisk = systems.filter((s) => s.risk === "High").length;
   const review = systems.filter((s) => s.status === "Review").length;
   const avgEvidence = systems.length ? Math.round(systems.reduce((sum, s) => sum + s.evidence, 0) / systems.length) : 0;
+  const metrics: Metric[] = [
+    { label: "AI systems", value: systems.length, icon: Boxes },
+    { label: "High risk", value: highRisk, icon: AlertTriangle },
+    { label: "Require review", value: review, icon: Activity },
+    { label: "Evidence coverage", value: `${avgEvidence}%`, icon: ShieldCheck },
+  ];
 
   return (
     <AppShell>
@@ -26,15 +34,10 @@ export default function MonitoringPage() {
         <p className="mt-2 text-sm text-white/35">A live view of AI risk, evidence and governance exposure across the inventory.</p>
 
         <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {[
-            ["AI systems", systems.length, Boxes],
-            ["High risk", highRisk, AlertTriangle],
-            ["Require review", review, Activity],
-            ["Evidence coverage", `${avgEvidence}%`, ShieldCheck],
-          ].map(([label, value, Icon]) => (
-            <div key={label as string} className="rounded-xl border border-white/[0.08] bg-[#0b0b0b] p-5">
-              <div className="flex items-center justify-between"><span className="text-[9px] uppercase tracking-[0.15em] text-white/25">{label as string}</span><Icon size={16} className="text-[#dc6b27]" /></div>
-              <p className="mt-4 text-3xl font-semibold">{value as string | number}</p>
+          {metrics.map(({ label, value, icon: Icon }) => (
+            <div key={label} className="rounded-xl border border-white/[0.08] bg-[#0b0b0b] p-5">
+              <div className="flex items-center justify-between"><span className="text-[9px] uppercase tracking-[0.15em] text-white/25">{label}</span><Icon size={16} className="text-[#dc6b27]" /></div>
+              <p className="mt-4 text-3xl font-semibold">{value}</p>
             </div>
           ))}
         </div>
