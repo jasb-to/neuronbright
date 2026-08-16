@@ -4,6 +4,26 @@ import { getSupabaseServerClient } from "@/lib/supabase-server";
 
 export const runtime = "nodejs";
 
+export async function GET() {
+  try {
+    const organisationId = await getCurrentOrganisationId();
+    if (!organisationId) return NextResponse.json({ error: "No organisation membership found." }, { status: 401 });
+    const supabase = await getSupabaseServerClient();
+    if (!supabase) return NextResponse.json({ error: "Supabase is not configured." }, { status: 500 });
+
+    const { data, error } = await supabase
+      .from("evidence")
+      .select("id,name,status,framework,source,storage_path,expires_at,created_at,ai_system_id,control_id")
+      .eq("organisation_id", organisationId)
+      .order("created_at", { ascending: false });
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json({ evidence: data ?? [] });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Unable to load evidence." }, { status: 500 });
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const organisationId = await getCurrentOrganisationId();
@@ -44,7 +64,7 @@ export async function POST(request: Request) {
         framework,
         expires_at: expiresAt || null,
       })
-      .select("id,name,status,framework,storage_path,created_at")
+      .select("id,name,status,framework,source,storage_path,expires_at,created_at,ai_system_id,control_id")
       .single();
 
     if (error) {
@@ -52,15 +72,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    await writeAuditLog({
-      action: "uploaded",
-      entityType: "evidence",
-      entityId: data.id,
-      metadata: { name: file.name, storagePath: path },
-    });
-
+    await writeAuditLog({ action: "uploaded", entityType: "evidence", entityId: data.id, metadata: { name: file.name, storagePath: path } });
     return NextResponse.json({ evidence: data }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Unable to upload evidence." }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const organisationId = await getCurrentOrganisationId();
+    if (!organisationId) return NextResponse.json({ error: "No organisation membership found." }, { status: 401 });
+    const supabase = await getSupabaseServerClient();
+    if (!supabase) return NextResponse.json({ error: "Supabase is not configured." }, { status: 500 });
+
+    const body = await request.json();
+    const id = String(body.id ?? "").trim();
+    const status = String(body.status ?? "").trim();
+    if (!id || !["Verified", "Pending", "Missing"].includes(status)) {
+      return NextResponse.json({ error: "A valid evidence id and status are required." }, { status: 400 });
+    }
+
+    const { data, error } = await supabase
+      .from("evidence")
+      .update({ status })
+      .eq("id", id)
+      .eq("organisation_id", organisationId)
+      .select("id,name,status,framework,source,storage_path,expires_at,created_at,ai_system_id,control_id")
+      .single();
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    await writeAuditLog({ action: "status_updated", entityType: "evidence", entityId: id, metadata: { status } });
+    return NextResponse.json({ evidence: data });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Unable to update evidence." }, { status: 500 });
   }
 }
