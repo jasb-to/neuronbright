@@ -10,7 +10,7 @@ const primaryNavigation = [
   { name: "Control Centre", href: "/dashboard", icon: LayoutDashboard },
   { name: "AI Systems", href: "/systems", icon: Boxes },
   { name: "Vendors", href: "/vendors", icon: Building2 },
-  { name: "Evidence Centre", href: "/evidence", icon: FileCheck2 },
+  { name: "Evidence Centre", href: "/evidence/register", icon: FileCheck2 },
   { name: "Upload Evidence", href: "/evidence/upload", icon: Upload },
 ];
 
