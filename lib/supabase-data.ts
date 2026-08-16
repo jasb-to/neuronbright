@@ -126,6 +126,7 @@ export async function createGovernanceRecord(input: {
   if (!organisationId) throw new Error("No organisation membership found.");
 
   const supabase = await getSupabaseServerClient();
+  if (!supabase) throw new Error("Supabase is not configured.");
 
   const { data: risk, error: riskError } = await supabase
     .from("risk_assessments")
