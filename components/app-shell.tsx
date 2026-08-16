@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Boxes, CheckSquare, FileCheck2, LayoutDashboard, Settings, Shield } from "lucide-react";
+import { Activity, Boxes, CheckSquare, FileCheck2, FileText, LayoutDashboard, Settings, Shield } from "lucide-react";
 import type { ReactNode } from "react";
 import { Brand } from "./brand";
 
@@ -16,6 +16,7 @@ const governanceNavigation = [
   { name: "Controls", href: "/controls", icon: Shield },
   { name: "Action Centre", href: "/actions", icon: CheckSquare },
   { name: "Monitoring", href: "/monitoring", icon: Activity },
+  { name: "Reports", href: "/reports", icon: FileText },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
