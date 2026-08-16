@@ -1,15 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { CheckCircle2, CircleAlert, FileCheck2, FileText, Plus, Search, ShieldCheck, Upload, Clock3, Link2, XCircle } from "lucide-react";
+import { CheckCircle2, CircleAlert, FileText, Search, ShieldCheck, Upload, Clock3, Link2, XCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { evidenceItems as seedEvidence } from "@/lib/mock-data";
 
-type Evidence = (typeof seedEvidence)[number] & { expires?: string; controls?: string[]; framework?: string };
+type Evidence = Omit<(typeof seedEvidence)[number], "status"> & { status: "Verified" | "Pending" | "Missing"; expires?: string; controls?: string[]; framework?: string };
 const STORAGE_KEY = "neuronbright:evidence";
 
-function loadEvidence(): Evidence[] { if (typeof window === "undefined") return seedEvidence; try { const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : seedEvidence; } catch { return seedEvidence; } }
+function loadEvidence(): Evidence[] { if (typeof window === "undefined") return seedEvidence.map((x) => ({ ...x, status: x.status as Evidence["status"] })); try { const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : seedEvidence.map((x) => ({ ...x, status: x.status as Evidence["status"] })); } catch { return seedEvidence.map((x) => ({ ...x, status: x.status as Evidence["status"] })); } }
 function daysUntil(date?: string) { if (!date) return null; return Math.ceil((new Date(date).getTime() - Date.now()) / 86400000); }
 
 export default function EvidencePage() {
