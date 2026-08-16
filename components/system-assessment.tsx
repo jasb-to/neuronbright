@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { assessSystem, defaultSystemAssessment, getControlsForSystem, SystemAssessmentForm } from "@/lib/system-assessment";
 import { createPreviewSystem } from "@/lib/system-assessment";
 import { saveSystem } from "@/lib/client-store";
-import { saveGovernanceRecord } from "@/lib/governance-store";
 
 type Step = 1 | 2 | 3 | 4;
 const dataOptions = ["Names and contact details","Employee information","Customer information","Financial information","Health information","Behavioural data","Performance data","CVs and employment history","Public information","Internal business information"];
@@ -30,12 +29,17 @@ export function SystemAssessment(){
  function canContinue(){if(step===1)return !!(form.name.trim()&&form.provider.trim()&&form.owner.trim()&&form.department.trim());if(step===2)return !!(form.purpose.trim()&&form.users.trim()&&form.affectedPeople.trim());if(step===3)return form.affectedCategory!=="Unknown";return form.dataTypes.length>0&&form.decisionType!=="Unknown"&&form.humanOversight!=="Unknown"&&form.deploymentType!=="Unknown"&&form.scale!=="Unknown"}
  function next(){if(canContinue())setStep(c=>(Math.min(4,c+1) as Step))}
  async function create(){
-   if(!canContinue() || saving) return;
-   setSaving(true); setError("");
-   const response = await fetch("/api/systems", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: form.name, provider: form.provider, model: form.model, owner: form.owner, department: form.department, purpose: form.purpose, dataTypes: form.dataTypes, riskLevel: assessment.overallLevel, evidenceScore: 0, lifecycleStage: "Assess" }) });
-   const payload = await response.json().catch(() => ({}));
-   if (!response.ok || !payload.system) { setSaving(false); setError(payload.error ?? "Unable to create the AI system. Make sure you are signed in and your organisation is configured."); return; }
-   const system = createPreviewSystem(form, assessment); saveSystem({ ...system, id: payload.system.id }); saveGovernanceRecord({ systemId: payload.system.id, assessment, controls, createdAt: new Date().toISOString() }); router.push(`/systems/${payload.system.id}`);
+   if(!canContinue()||saving)return;
+   setSaving(true);setError("");
+   try{
+     const response=await fetch("/api/systems",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:form.name,provider:form.provider,model:form.model,owner:form.owner,department:form.department,purpose:form.purpose,dataTypes:form.dataTypes,riskLevel:assessment.overallLevel,evidenceScore:0,lifecycleStage:"Assess"})});
+     const payload=await response.json().catch(()=>({}));
+     if(!response.ok||!payload.system)throw new Error(payload.error||"Unable to create the AI system.");
+     const governanceResponse=await fetch("/api/governance",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemId:payload.system.id,assessment,controls})});
+     const governancePayload=await governanceResponse.json().catch(()=>({}));
+     if(!governanceResponse.ok)throw new Error(governancePayload.error||"System created, but governance data could not be saved.");
+     const preview=createPreviewSystem(form,assessment);saveSystem({...preview,id:payload.system.id});router.push(`/systems/${payload.system.id}`);
+   }catch(err){setError(err instanceof Error?err.message:"Unable to create AI system.");setSaving(false);}
  }
  const levelClass=assessment.overallLevel==="High"?"text-[#dc6b27]":assessment.overallLevel==="Medium"?"text-yellow-300":"text-emerald-300";
  return <div className="mx-auto max-w-[1100px] px-6 py-8 xl:px-8">
