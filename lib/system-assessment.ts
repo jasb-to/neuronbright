@@ -3,7 +3,10 @@ import {
   RiskAssessment,
   RiskAssessmentInput,
 } from "@/lib/types";
-import { calculateRiskAssessment, generateControls } from "@/lib/governance";
+import {
+  calculateRiskAssessment,
+  generateControls,
+} from "@/lib/governance";
 
 export type SystemAssessmentForm = {
   name: string;
@@ -11,11 +14,60 @@ export type SystemAssessmentForm = {
   model: string;
   owner: string;
   department: string;
+
   purpose: string;
   users: string;
   affectedPeople: string;
   decisions: string;
+
   dataTypes: string[];
+
+  deploymentType:
+    | "Internal"
+    | "Customer-facing"
+    | "Public-facing"
+    | "Unknown";
+
+  decisionType:
+    | "Assistance only"
+    | "Recommendation"
+    | "Decision support"
+    | "Automated decision"
+    | "Unknown";
+
+  humanOversight:
+    | "Meaningful review"
+    | "Review available"
+    | "Limited review"
+    | "No meaningful review"
+    | "Unknown";
+
+  affectedCategory:
+    | "General population"
+    | "Employees"
+    | "Customers"
+    | "Job applicants"
+    | "Children"
+    | "Patients"
+    | "Vulnerable people"
+    | "Unknown";
+
+  sector:
+    | "General business"
+    | "Employment"
+    | "Finance"
+    | "Healthcare"
+    | "Education"
+    | "Public sector"
+    | "Other";
+
+  scale:
+    | "Small"
+    | "Medium"
+    | "Large"
+    | "Enterprise"
+    | "Unknown";
+
   impactOnIndividuals: number;
   dataSensitivity: number;
   autonomy: number;
@@ -29,11 +81,21 @@ export const defaultSystemAssessment: SystemAssessmentForm = {
   model: "",
   owner: "",
   department: "",
+
   purpose: "",
   users: "",
   affectedPeople: "",
   decisions: "",
+
   dataTypes: [],
+
+  deploymentType: "Unknown",
+  decisionType: "Unknown",
+  humanOversight: "Unknown",
+  affectedCategory: "Unknown",
+  sector: "General business",
+  scale: "Unknown",
+
   impactOnIndividuals: 50,
   dataSensitivity: 50,
   autonomy: 50,
@@ -41,16 +103,126 @@ export const defaultSystemAssessment: SystemAssessmentForm = {
   regulatoryExposure: 50,
 };
 
+const sensitiveDataTypes = new Set([
+  "Health information",
+  "Financial information",
+  "Behavioural data",
+  "Performance data",
+  "Employee information",
+]);
+
+const personalDataTypes = new Set([
+  "Names and contact details",
+  "Employee information",
+  "Customer information",
+  "Financial information",
+  "Health information",
+  "Behavioural data",
+  "Performance data",
+  "CVs and employment history",
+]);
+
 export function getRiskInputs(
   form: SystemAssessmentForm
 ): RiskAssessmentInput {
+  const dataSensitivityBoost =
+    form.dataTypes.filter((item) =>
+      sensitiveDataTypes.has(item)
+    ).length * 7;
+
+  const personalDataBoost =
+    form.dataTypes.filter((item) =>
+      personalDataTypes.has(item)
+    ).length * 3;
+
+  const sectorBoost =
+    form.sector === "Employment" ||
+    form.sector === "Healthcare" ||
+    form.sector === "Finance" ||
+    form.sector === "Public sector"
+      ? 12
+      : 0;
+
+  const affectedPeopleBoost =
+    form.affectedCategory === "Children" ||
+    form.affectedCategory === "Patients" ||
+    form.affectedCategory === "Vulnerable people"
+      ? 15
+      : form.affectedCategory === "Job applicants"
+        ? 12
+        : 0;
+
+  const decisionBoost =
+    form.decisionType === "Automated decision"
+      ? 25
+      : form.decisionType === "Decision support"
+        ? 15
+        : form.decisionType === "Recommendation"
+          ? 10
+          : 0;
+
+  const autonomyBoost =
+    form.humanOversight === "No meaningful review"
+      ? 25
+      : form.humanOversight === "Limited review"
+        ? 15
+        : form.humanOversight === "Review available"
+          ? 5
+          : 0;
+
+  const deploymentBoost =
+    form.deploymentType === "Public-facing"
+      ? 12
+      : form.deploymentType === "Customer-facing"
+        ? 8
+        : 0;
+
+  const scaleBoost =
+    form.scale === "Enterprise"
+      ? 15
+      : form.scale === "Large"
+        ? 10
+        : form.scale === "Medium"
+          ? 5
+          : 0;
+
   return {
-    impactOnIndividuals: form.impactOnIndividuals,
-    dataSensitivity: form.dataSensitivity,
-    autonomy: form.autonomy,
-    scaleOfDeployment: form.scaleOfDeployment,
-    regulatoryExposure: form.regulatoryExposure,
+    impactOnIndividuals: clamp(
+      form.impactOnIndividuals +
+        affectedPeopleBoost +
+        decisionBoost * 0.25
+    ),
+
+    dataSensitivity: clamp(
+      form.dataSensitivity +
+        dataSensitivityBoost +
+        personalDataBoost
+    ),
+
+    autonomy: clamp(
+      form.autonomy +
+        decisionBoost * 0.7 +
+        autonomyBoost
+    ),
+
+    scaleOfDeployment: clamp(
+      form.scaleOfDeployment +
+        scaleBoost +
+        deploymentBoost * 0.5
+    ),
+
+    regulatoryExposure: clamp(
+      form.regulatoryExposure +
+        sectorBoost +
+        decisionBoost * 0.5 +
+        affectedPeopleBoost * 0.5 +
+        deploymentBoost * 0.5
+    ),
   };
+}
+
+function clamp(value: number): number {
+  return Math.max(0, Math.min(100, Math.round(value)));
 }
 
 export function assessSystem(
@@ -59,10 +231,10 @@ export function assessSystem(
   return calculateRiskAssessment(getRiskInputs(form));
 }
 
-export function getControlsForSystem(form: SystemAssessmentForm) {
-  const assessment = assessSystem(form);
-
-  return generateControls(assessment);
+export function getControlsForSystem(
+  form: SystemAssessmentForm
+) {
+  return generateControls(assessSystem(form));
 }
 
 export function createPreviewSystem(
@@ -86,14 +258,8 @@ export function createPreviewSystem(
 }
 
 export function getRiskLabel(score: number): string {
-  if (score >= 70) {
-    return "High";
-  }
-
-  if (score >= 40) {
-    return "Medium";
-  }
-
+  if (score >= 70) return "High";
+  if (score >= 40) return "Medium";
   return "Low";
 }
 
