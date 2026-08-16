@@ -11,14 +11,8 @@ function clampScore(value: number): number {
 }
 
 export function getRiskLevel(score: number): RiskLevel {
-  if (score >= 70) {
-    return "High";
-  }
-
-  if (score >= 40) {
-    return "Medium";
-  }
-
+  if (score >= 70) return "High";
+  if (score >= 40) return "Medium";
   return "Low";
 }
 
@@ -68,10 +62,14 @@ export function calculateRiskAssessment(
     ),
   ];
 
-  const overallScore = clampScore(
-    dimensions.reduce((total, dimension) => total + dimension.score, 0) /
-      dimensions.length
-  );
+  const weightedScore =
+    dimensions[0].score * 0.25 +
+    dimensions[1].score * 0.20 +
+    dimensions[2].score * 0.20 +
+    dimensions[3].score * 0.15 +
+    dimensions[4].score * 0.20;
+
+  const overallScore = clampScore(weightedScore);
 
   return {
     overallScore,
@@ -102,7 +100,7 @@ function getDataSensitivityExplanation(score: number): string {
     return "The system processes information associated with people or organisational activity.";
   }
 
-  return "The system primarily processes low-sensitivity information.";
+  return "The system primarily processes lower-sensitivity information.";
 }
 
 function getAutonomyExplanation(score: number): string {
@@ -119,7 +117,7 @@ function getAutonomyExplanation(score: number): string {
 
 function getScaleExplanation(score: number): string {
   if (score >= 70) {
-    return "The system operates at significant organisational or user scale.";
+    return "The system operates at significant organisational, customer or user scale.";
   }
 
   if (score >= 40) {
@@ -177,7 +175,10 @@ export function generateControls(
     },
   ];
 
-  if (assessment.overallLevel === "Medium" || assessment.overallLevel === "High") {
+  if (
+    assessment.overallLevel === "Medium" ||
+    assessment.overallLevel === "High"
+  ) {
     controls.push(
       {
         id: "CTRL-004",
@@ -243,7 +244,37 @@ export function generateControls(
         required: true,
         status: "Missing",
         evidenceRequired: ["Supplier AI assessment"],
-      }
+      },
+      {
+        id: "CTRL-010",
+        name: "Fairness and discrimination assessment",
+        description:
+          "Potential discriminatory impacts and relevant fairness risks should be assessed for the intended use.",
+        area: "Risk",
+        required: true,
+        status: "Missing",
+        evidenceRequired: ["Fairness or bias assessment"],
+      },
+      {
+        id: "CTRL-011",
+        name: "Transparency information documented",
+        description:
+          "The organisation should document how relevant users and affected people are informed about the AI system.",
+        area: "Controls",
+        required: true,
+        status: "Missing",
+        evidenceRequired: ["AI transparency notice"],
+      },
+      {
+        id: "CTRL-012",
+        name: "Technical documentation maintained",
+        description:
+          "Material information about the system, intended purpose, limitations and operation should be documented.",
+        area: "Evidence",
+        required: true,
+        status: "Missing",
+        evidenceRequired: ["AI system technical documentation"],
+      },
     );
   }
 
@@ -253,9 +284,7 @@ export function generateControls(
 export function calculateEvidenceScore(
   controls: Control[]
 ): number {
-  if (controls.length === 0) {
-    return 100;
-  }
+  if (controls.length === 0) return 100;
 
   const completed = controls.filter(
     (control) => control.status === "Complete"
@@ -274,10 +303,10 @@ export function calculateGovernanceScore(input: {
 }) {
   const overall = clampScore(
     input.inventory * 0.15 +
-      input.risk * 0.2 +
-      input.controls * 0.2 +
-      input.evidence * 0.2 +
-      input.ownership * 0.1 +
+      input.risk * 0.20 +
+      input.controls * 0.20 +
+      input.evidence * 0.20 +
+      input.ownership * 0.10 +
       input.monitoring * 0.15
   );
 
@@ -290,13 +319,7 @@ export function calculateGovernanceScore(input: {
 export function getGovernancePriority(
   level: RiskLevel
 ): "Immediate" | "Priority" | "Routine" {
-  if (level === "High") {
-    return "Immediate";
-  }
-
-  if (level === "Medium") {
-    return "Priority";
-  }
-
+  if (level === "High") return "Immediate";
+  if (level === "Medium") return "Priority";
   return "Routine";
 }
