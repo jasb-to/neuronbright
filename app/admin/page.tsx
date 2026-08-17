@@ -14,9 +14,13 @@ async function getHealth(): Promise<Health | null> {
   const headerStore = await headers();
   const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
   const protocol = headerStore.get("x-forwarded-proto") ?? "https";
+  const cookie = headerStore.get("cookie");
   if (!host) return null;
 
-  const response = await fetch(`${protocol}://${host}/api/admin/health`, { cache: "no-store" });
+  const response = await fetch(`${protocol}://${host}/api/admin/health`, {
+    cache: "no-store",
+    headers: cookie ? { cookie } : undefined,
+  });
   if (!response.ok) return null;
   return response.json();
 }
