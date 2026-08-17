@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Boxes, CheckSquare, FileCheck2, FileText, LayoutDashboard, Settings, Shield, Building2, Upload, ScrollText } from "lucide-react";
+import { Activity, Boxes, CheckSquare, FileCheck2, FileText, LayoutDashboard, Settings, Shield, Building2, Upload, ScrollText, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { Brand } from "./brand";
 
@@ -20,6 +20,7 @@ const governanceNavigation = [
   { name: "Monitoring", href: "/monitoring", icon: Activity },
   { name: "Audit Trail", href: "/audit", icon: ScrollText },
   { name: "Reports", href: "/reports", icon: FileText },
+  { name: "Team", href: "/team", icon: Users },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
