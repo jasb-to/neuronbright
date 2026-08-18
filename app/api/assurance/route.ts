@@ -1,8 +1,20 @@
 import { NextResponse } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
-import { evaluateAssurance } from "@/lib/assurance-engine";
+import { ASSURANCE_STAGES, evaluateAssurance, type AssuranceStage } from "@/lib/assurance-engine";
 
 export const dynamic = "force-dynamic";
+
+function toEvents(events: Array<{ id: string; stage: string; actor: string; basis: string; evidence_ref?: string | null; observed_at: string; metadata?: Record<string, unknown> }>) {
+  return events.map((event) => ({
+    id: event.id,
+    stage: event.stage as AssuranceStage,
+    actor: event.actor,
+    basis: event.basis,
+    evidenceRef: event.evidence_ref,
+    observedAt: event.observed_at,
+    metadata: event.metadata,
+  }));
+}
 
 export async function GET() {
   const supabase = await getSupabaseServerClient();
@@ -29,21 +41,11 @@ export async function GET() {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   const evaluated = (controls ?? []).map((control) => {
-    const events = (control.assurance_events ?? []).map((event: { id: string; stage: string; actor: string; basis: string; evidence_ref?: string | null; observed_at: string; metadata?: Record<string, unknown> }) => ({
-      id: event.id,
-      stage: event.stage,
-      actor: event.actor,
-      basis: event.basis,
-      evidenceRef: event.evidence_ref,
-      observedAt: event.observed_at,
-      metadata: event.metadata,
-    }));
-    const expectedEvents = Number(control.target_percent) >= 100 ? Number(control.runtime_expected_events ?? 0) : Number(control.runtime_expected_events ?? 0);
-    const observedEvents = Number(control.runtime_observed_events ?? 0);
+    const events = toEvents(control.assurance_events ?? []);
     const evaluation = evaluateAssurance({
       targetPercent: Number(control.target_percent),
-      expectedEvents,
-      observedEvents,
+      expectedEvents: Number(control.runtime_expected_events ?? 0),
+      observedEvents: Number(control.runtime_observed_events ?? 0),
       lastChangeAt: control.last_change_at,
       lastVerificationAt: control.last_verified_at,
       events,
@@ -66,15 +68,19 @@ export async function POST(request: Request) {
     actor?: string;
     basis?: string;
     evidenceRef?: string;
+    observedAt?: string;
     metadata?: Record<string, unknown>;
   };
   if (!body.assuranceControlId || !body.stage || !body.actor || !body.basis) {
     return NextResponse.json({ error: "assuranceControlId, stage, actor and basis are required." }, { status: 400 });
   }
+  if (!ASSURANCE_STAGES.includes(body.stage as AssuranceStage)) {
+    return NextResponse.json({ error: `Invalid lifecycle stage. Expected one of: ${ASSURANCE_STAGES.join(", ")}.` }, { status: 400 });
+  }
 
   const { data: control, error: controlError } = await supabase
     .from("assurance_controls")
-    .select("organisation_id")
+    .select("*")
     .eq("id", body.assuranceControlId)
     .single();
   if (controlError || !control) return NextResponse.json({ error: controlError?.message ?? "Control not found." }, { status: 404 });
@@ -87,6 +93,7 @@ export async function POST(request: Request) {
     .maybeSingle();
   if (!membership) return NextResponse.json({ error: "Forbidden." }, { status: 403 });
 
+  const observedAt = body.observedAt ?? new Date().toISOString();
   const { data: event, error } = await supabase.from("assurance_events").insert({
     organisation_id: control.organisation_id,
     assurance_control_id: body.assuranceControlId,
@@ -94,9 +101,45 @@ export async function POST(request: Request) {
     actor: body.actor,
     basis: body.basis,
     evidence_ref: body.evidenceRef ?? null,
+    observed_at: observedAt,
     metadata: body.metadata ?? {},
   }).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ event }, { status: 201 });
+  const stage = body.stage as AssuranceStage;
+  const isGovernedChange = body.metadata?.eventType === "governed_change" || body.metadata?.change === true;
+  const update: Record<string, unknown> = {};
+
+  if (stage === "Verified") update.last_verified_at = observedAt;
+  if (stage === "Effective") update.last_effective_at = observedAt;
+  if (isGovernedChange) update.last_change_at = observedAt;
+
+  const { data: allEvents, error: eventsError } = await supabase
+    .from("assurance_events")
+    .select("id, stage, actor, basis, evidence_ref, observed_at, metadata")
+    .eq("assurance_control_id", body.assuranceControlId);
+  if (eventsError) return NextResponse.json({ error: eventsError.message }, { status: 500 });
+
+  const nextChangeAt = isGovernedChange ? observedAt : control.last_change_at;
+  const nextVerifiedAt = stage === "Verified" ? observedAt : control.last_verified_at;
+  const evaluation = evaluateAssurance({
+    targetPercent: Number(control.target_percent),
+    expectedEvents: Number(control.runtime_expected_events ?? 0),
+    observedEvents: Number(control.runtime_observed_events ?? 0),
+    lastChangeAt: nextChangeAt,
+    lastVerificationAt: nextVerifiedAt,
+    events: toEvents(allEvents ?? []),
+  });
+
+  update.state = evaluation.state;
+  if (Object.keys(update).length > 0) {
+    const { error: updateError } = await supabase
+      .from("assurance_controls")
+      .update(update)
+      .eq("id", body.assuranceControlId)
+      .eq("organisation_id", control.organisation_id);
+    if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ event, evaluation, controlId: body.assuranceControlId }, { status: 201 });
 }
